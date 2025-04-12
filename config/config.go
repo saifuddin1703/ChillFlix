@@ -14,6 +14,11 @@ type Config struct {
 	GoogleClientID     string
 	GoogleClientSecret string
 	GoogleRedirectURI  string
+	JWTSecret          string
+}
+
+func (c *Config) GetJWTSecret() string {
+	return c.JWTSecret
 }
 
 // get singletonn config

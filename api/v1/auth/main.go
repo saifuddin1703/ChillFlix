@@ -54,7 +54,7 @@ func (h *AuthHandler) oauthCallback(c *gin.Context) {
 	}
 
 	// Exchange the authorization code for a token
-	userId, err := h.googleAuthService.Callback(code, state)
+	accessToken, refreshToken, userId, err := h.googleAuthService.Callback(code, state)
 	fmt.Println("userId", userId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to exchange token"})
@@ -75,8 +75,8 @@ func (h *AuthHandler) oauthCallback(c *gin.Context) {
 	// }
 
 	c.JSON(http.StatusOK, gin.H{
-		"access_token":  "accessToken",
-		"refresh_token": "refreshToken",
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
 		"user":          userId,
 	})
 }

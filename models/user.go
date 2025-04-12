@@ -3,17 +3,18 @@ package models
 import (
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
-	ID        primitive.ObjectID `json:"id" bson:"-"`
-	Username  string             `json:"username" bson:"username"`
-	Email     string             `json:"email" bson:"email"`
-	Password  string             `json:"password" bson:"password"`
-	CreatedAt time.Time          `json:"created_at" bson:"created_at"`
-	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at"`
+	Id           string    `json:"id" bson:"_id"`
+	Username     string    `json:"username" bson:"username"`
+	Email        string    `json:"email" bson:"email"`
+	Password     string    `json:"password" bson:"password"`
+	AccessToken  string    `json:"access_token" bson:"access_token"`
+	RefreshToken string    `json:"refresh_token" bson:"refresh_token"`
+	CreatedAt    time.Time `json:"created_at" bson:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at" bson:"updated_at"`
 }
 
 func NewUser(username string, email string, password string) *User {
@@ -33,10 +34,6 @@ func NewUser(username string, email string, password string) *User {
 		user.Password = hashedPassword
 	}
 	return user
-}
-
-func (u *User) SetID(id primitive.ObjectID) {
-	u.ID = id
 }
 
 func (u *User) HashPassword() (string, error) {

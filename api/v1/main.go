@@ -46,7 +46,8 @@ func (h *V1Handler) SetupRoutes() {
 		fmt.Println("Error loading config:", err)
 		return
 	}
-	authRouter := auth.NewAuthHandler(h.router, services.NewGoogleAuthService(config.GetGoogleClientID(), config.GetGoogleClientSecret(), config.GetGoogleRedirectURI(), userRepo.UserRepository))
+	tokenService := services.NewTokenService(config.GetJWTSecret())
+	authRouter := auth.NewAuthHandler(h.router, services.NewGoogleAuthService(config.GetGoogleClientID(), config.GetGoogleClientSecret(), config.GetGoogleRedirectURI(), userRepo.UserRepository, tokenService))
 	authRouter.SetupRoutes()
 
 	// Setup the video routes

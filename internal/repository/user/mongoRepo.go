@@ -4,6 +4,7 @@ import (
 	"chillfix/internal/database"
 	"chillfix/models"
 	"context"
+	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -24,24 +25,19 @@ func NewMongoUserRepository(db *database.MongoClient) UserRepository {
 }
 
 func (r *mongoUserRepository) Create(ctx context.Context, user *models.User) error {
-
-	result, err := r.collection.InsertOne(ctx, user)
+	if user.Id == "" {
+		user.Id = primitive.NewObjectID().Hex()
+	}
+	_, err := r.collection.InsertOne(ctx, user)
 	if err != nil {
 		return err
 	}
-
-	userId := result.InsertedID.(primitive.ObjectID)
-	user.SetID(userId)
 	return nil
 }
 
 func (r *mongoUserRepository) FindByID(ctx context.Context, id string) (*models.User, error) {
 	var user models.User
-	objectId, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, err
-	}
-	err = r.collection.FindOne(ctx, bson.M{"_id": objectId}).Decode(&user)
+	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&user)
 	if err != nil {
 		return nil, err
 	}
@@ -50,10 +46,12 @@ func (r *mongoUserRepository) FindByID(ctx context.Context, id string) (*models.
 
 func (r *mongoUserRepository) FindByEmail(ctx context.Context, email string) (*models.User, error) {
 	var user models.User
-	err := r.collection.FindOne(ctx, bson.M{"email": email}).Decode(&user)
+	result := r.collection.FindOne(ctx, bson.M{"email": email})
+	err := result.Decode(&user)
 	if err != nil {
 		return nil, err
 	}
+
 	return &user, nil
 }
 
@@ -62,17 +60,33 @@ func (r *mongoUserRepository) Update(ctx context.Context, user *models.User) err
 
 	_, err := r.collection.UpdateOne(
 		ctx,
-		bson.M{"_id": user.ID},
+		bson.M{"_id": user.Id},
 		bson.M{"$set": user},
 	)
 	return err
 }
 
-func (r *mongoUserRepository) Delete(ctx context.Context, id string) error {
-	objectId, err := primitive.ObjectIDFromHex(id)
+func (r *mongoUserRepository) Upsert(ctx context.Context, user *models.User) error {
+	user.UpdatedAt = time.Now()
+	result, err := r.collection.UpdateOne(
+		ctx,
+		bson.M{"email": user.Email},
+		bson.M{"$set": user},
+	)
 	if err != nil {
 		return err
 	}
-	_, err = r.collection.DeleteOne(ctx, bson.M{"_id": objectId})
+	fmt.Println("matched count : ", result.MatchedCount)
+	if result.MatchedCount == 0 {
+		_, err := r.collection.InsertOne(ctx, user)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *mongoUserRepository) Delete(ctx context.Context, id string) error {
+	_, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
 	return err
 }
