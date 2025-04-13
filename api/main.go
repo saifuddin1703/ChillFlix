@@ -3,7 +3,9 @@ package api
 import (
 	v1 "chillfix/api/v1"
 	"fmt"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -35,6 +37,14 @@ func (a *API) Start() error {
 }
 
 func (a *API) SetupRoutes() {
+	a.engine.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"}, // Or specify "http://localhost:5500"
+		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 	router := a.engine.Group("/api")
 	// Setup the routes
 	router.GET("/ping", func(ctx *gin.Context) {

@@ -37,9 +37,6 @@ func (h *V1Handler) SetupRoutes() {
 		return
 	}
 
-	userRouter := user.NewUserHandler(h.router)
-	userRouter.SetupRoutes()
-
 	// Setup the auth routes
 	config, err := config.GetConfig()
 	if err != nil {
@@ -50,6 +47,10 @@ func (h *V1Handler) SetupRoutes() {
 	authRouter := auth.NewAuthHandler(h.router, services.NewGoogleAuthService(config.GetGoogleClientID(), config.GetGoogleClientSecret(), config.GetGoogleRedirectURI(), userRepo.UserRepository, tokenService))
 	authRouter.SetupRoutes()
 
+	// authMiddleware := middleware.NewAuthMiddleware(tokenService)
+	// h.router.Use(authMiddleware.Authenticate())
+	userRouter := user.NewUserHandler(h.router)
+	userRouter.SetupRoutes()
 	// Setup the video routes
 	videoRouter := video.NewVideoHandler(h.router)
 	videoRouter.SetupRoutes()
